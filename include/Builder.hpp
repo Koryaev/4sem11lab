@@ -23,6 +23,8 @@
 #define build "cmake --build _builds"
 #define target "cmake --build _builds --target install"
 #define package "cmake --build _builds --target package"
+
+//TODO: ВСТАВИТЬ МЕСТОРАСПОЛОЖЕНИЯ СВОЕЙ cmake-build-debug ДИРЕКТОРИИ
 #define path \
   "/Users/mihailkoraev/Documents/GitHub/11lab/cmake-build-debug"
 
