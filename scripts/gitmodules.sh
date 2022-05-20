@@ -1078,5 +1078,5 @@ sleep 1
 clear
 
 echo rebooting system
-#sudo shutdown -r now
+sudo shutdown -r now
 
