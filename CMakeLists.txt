@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.12)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,39 +8,37 @@ option(BUILD_DOCS "Build documentation" OFF)
 option(BUILD_COVERAGE "Build code coverage" OFF)
 
 set(
-  HUNTER_CACHE_SERVERS
-  "https://github.com/bmstu-iu8-cpp-sem-3/hunter-cache"
-  CACHE STRING "Default cache server"
+        HUNTER_CACHE_SERVERS
+        "https://github.com/bmstu-iu8-cpp-sem-3/hunter-cache"
+        CACHE STRING "Default cache server"
 )
 
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-  URL "https://github.com/cpp-pm/hunter/archive/v0.23.314.tar.gz"
-  SHA1 "95c47c92f68edb091b5d6d18924baabe02a6962a"
+        URL "https://github.com/cpp-pm/hunter/archive/v0.23.278.tar.gz"
+        SHA1 "35fa55bc1dfcf9f4d7264f8bb26cd1759ce1ae07"
 )
 
 # TODO: rename project and delete this comment
-project(4-sem-11-lab VERSION 0.1.0)
+project(builder VERSION 0.1.0)
 string(APPEND CMAKE_CXX_FLAGS " -pedantic -Werror -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-command-line-argument")
 string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
 
-# new versions of cmake contain gtest search files
-# commented out to increase the build speed.
 hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
 
-hunter_add_package(Boost  COMPONENTS system program_options thread filesystem log timer)
-#find_package(Boost 1.65.1 EXACT)
-find_package(Boost COMPONENTS system program_options thread filesystem log timer)
-
-hunter_add_package(BoostProcess)
-find_package(BoostProcess CONFIG REQUIRED)
-
+#set(Boost_INCLUDE_DIR /home/lamp/boost_1_75_0)
+hunter_add_package(Boost COMPONENTS system filesystem program_options thread log timer)
+find_package(Boost COMPONENTS system filesystem program_options thread log log_setup timer)
 
 hunter_add_package(Async++)
 find_package(Async++ CONFIG REQUIRED)
+
+hunter_add_package(nlohmann_json)
+find_package(nlohmann_json CONFIG REQUIRED)
+
 
 find_package(Threads)
 
@@ -51,53 +49,44 @@ set(LIBS Boost::boost
         ${Boost_THREAD_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
         Boost::timer Boost::program_options
+        nlohmann_json::nlohmann_json
         Async++::Async++
         )
 
-add_library(${PROJECT_NAME} STATIC
-  # enum your files and delete this comment
+
+
+#=================================== BUILD LIBRARY ===================================
+add_library(${PROJECT_NAME}_lib STATIC
+        # enum your files and delete this comment
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/Builder.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/sources/start_options.cpp
-)
+        )
 
+target_include_directories(${PROJECT_NAME}_lib PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>"
+        "$<INSTALL_INTERFACE:include/>"
+        )
 
+target_link_libraries(${PROJECT_NAME}_lib pthread ${LIBS} )
 
-#include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+#=================================== BUILD LIBRARY ===================================
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-  "$<INSTALL_INTERFACE:include>"
-)
+#=================================== BUILD EXECUTABLE ================================
 
-
-target_link_libraries(${PROJECT_NAME} pthread ${LIBS})
-
-add_executable(builder_11_lab
+add_executable(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
         )
 
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib pthread ${LIBS})
 
-target_link_libraries(${PROJECT_NAME} pthread ${LIBS})
-
-target_link_libraries(builder_11_lab ${PROJECT_NAME})
-#
-#target_link_libraries(${PROJECT_NAME}
-#        Async++::Async++
-#        BoostProcess::boost_process)
-
-#target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-#target_link_libraries(${PROJECT_NAME} Boost::system)
-#target_link_libraries(${PROJECT_NAME} Boost::process)
-#target_link_libraries(${PROJECT_NAME} Async++::Async++)
-#target_link_libraries(${PROJECT_NAME} BoostProcess::boost_process)
-
-
+#=================================== BUILD EXECUTABLE ================================
 
 if(BUILD_TESTS)
   add_executable(tests
-    ${CMAKE_CURRENT_SOURCE_DIR}/tests/example.cpp
-  )
-  target_link_libraries(tests ${PROJECT_NAME} GTest::gtest_main)
+          # TODO: enum your files and delete this comment
+          ${CMAKE_CURRENT_SOURCE_DIR}/tests/example.cpp
+          )
+  target_link_libraries(tests ${PROJECT_NAME}_lib GTest::gtest_main)
   enable_testing()
   add_test(NAME unit_tests COMMAND tests)
 endif()
@@ -125,17 +114,17 @@ endif()
 
 include(CPackConfig.cmake)
 
-install(TARGETS ${PROJECT_NAME} builder_11_lab
-  EXPORT "${PROJECT_NAME}-targets"
-  RUNTIME DESTINATION bin
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  INCLUDES DESTINATION include
-)
+install(TARGETS ${PROJECT_NAME}_lib ${PROJECT_NAME}
+        EXPORT "${PROJECT_NAME}-targets"
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        INCLUDES DESTINATION include
+        )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
 
 install(EXPORT "${PROJECT_NAME}-targets"
-  NAMESPACE "${PROJECT_NAME}::"
-  DESTINATION "lib/cmake"
-)
+        NAMESPACE "${PROJECT_NAME}::"
+        DESTINATION "lib/cmake"
+        )
